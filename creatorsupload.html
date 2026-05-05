@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Upload Content</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <header>
+            <h1>Creator Upload Portal</h1>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="coursepage.html">Paid Courses</a>
+                <a href="Basic courses.html">Free Courses</a>
+                <a href="creators.html">Creators</a>
+                <a href="login.html">Login</a>
+                <a href=" creatorsupload.html">creatorsupload</a>
+            </nav>
+        </header>
+
+        <section>
+            <h2>Upload New Course</h2>
+
+            <form class="form-box" id="uploadForm">
+                <input
+                    type="text"
+                    id="title"
+                    placeholder="Course Title"
+                    required
+                />
+
+                <textarea
+                    id="description"
+                    placeholder="Course Description"
+                ></textarea>
+
+                <label>Upload Video</label>
+                <input type="file" id="videoFile" accept="video/*" required />
+
+                <label>Upload Project Files (.zip)</label>
+                <input type="file" id="assetFile" accept=".zip" />
+
+                <label>Course Type</label>
+                <select id="courseType">
+                    <option value="free">Free</option>
+                    <option value="paid">Paid</option>
+                </select>
+
+                <button type="button" onclick="handleUpload()">
+                    Upload Course
+                </button>
+            </form>
+
+            <p id="uploadStatus"></p>
+        </section>
+
+        <script src="script.js"></script>
+    </body>
+</html>
