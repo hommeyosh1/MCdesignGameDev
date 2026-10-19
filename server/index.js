@@ -84,6 +84,7 @@ app.get('/api/admin/subscribers',adminOnly,async(req,res)=>{
 });
 app.get('/api/admin/consent/:id',adminOnly,async(req,res)=>{const id=Number(req.params.id);if(!Number.isSafeInteger(id))return res.sendStatus(400);const {rows}=await pool.query('SELECT channel,event_type,consent_version,source,happened_at FROM consent_events WHERE subscriber_id=$1 ORDER BY happened_at DESC',[id]);res.json({events:rows})});
 app.post('/api/admin/send',adminOnly,async(req,res)=>{
+ if(process.env.ENABLE_CAMPAIGNS!=='true')return res.status(503).json({error:'Campaign sending is disabled until unsubscribe webhooks and compliance review are complete'});
  const {channel,subject,body}=req.body;if(!['email','sms'].includes(channel)||typeof body!=='string'||body.length<1||body.length>1400||typeof subject!=='string'||subject.length>180)return res.status(400).json({error:'Invalid message'});
  const field=channel==='email'?'email':'phone';const verified=channel==='email'?'email_verified_at':'phone_verified_at';const unsub=channel==='email'?'unsubscribed_email_at':'unsubscribed_sms_at';
  const {rows}=await pool.query('SELECT id,'+field+' AS destination FROM subscribers WHERE '+verified+' IS NOT NULL AND '+unsub+' IS NULL AND '+field+' IS NOT NULL');
