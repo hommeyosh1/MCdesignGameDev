@@ -230,3 +230,10 @@ section h2 {
         font-size: 12px;
     }
 }
+
+/* Atmospheric backgrounds for legacy pages, without changing their structure */
+body:has(h1:first-child){background-color:#080e13}
+body:has(header h1) header{background-image:linear-gradient(rgba(3,8,12,.70),rgba(3,8,12,.94)),url("6.png")}
+body:has(#username){background:linear-gradient(rgba(5,10,15,.82),rgba(5,10,15,.92)),url("7.png") center/cover fixed}
+body:has(#savedWatchTime){background:linear-gradient(rgba(5,10,15,.85),rgba(5,10,15,.95)),url("8.png") center/cover fixed}
+body:has([placeholder="Creator Name"]){background:linear-gradient(rgba(5,10,15,.85),rgba(5,10,15,.95)),url("9.png") center/cover fixed}
