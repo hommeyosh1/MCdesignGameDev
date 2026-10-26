@@ -7,7 +7,7 @@
 <main class="wrap"><section class="hero"><div class="eyebrow">Weekly GASP Easter Egg Challenge</div><h1>Find the clues.<br><span>Enter the drawing.</span></h1><p class="lead">Each new GASP tutorial features hidden Easter eggs. Find at least <strong>2 out of 3</strong>, answer the challenge questions, and complete an entry for the weekly random gift card drawing.</p><p><a class="button" href="#enter">How to enter</a> &nbsp; <a href="https://www.youtube.com/playlist?list=PLdGaqiEl2wRU" target="_blank" rel="noopener">Watch GASP playlist</a></p></section>
 <section class="cards"><article class="card"><span class="num">1</span><h3>Explore the episode</h3><p>Find 3 Easter eggs placed throughout the tutorial.</p></article><article class="card"><span class="num">2</span><h3>Solve the challenge</h3><p>Submit your name, email and answers. Two completed answers are required. Entries are not graded for correctness.</p></article><article class="card"><span class="num">3</span><h3>Saturday drawing</h3><p>One eligible entry will be selected randomly after entries close.</p></article></section>
 <section class="two"><article class="card"><div class="eyebrow">Weekly prize</div><div class="prize">$15</div><p>Planned gift card, delivered by email or postal mail at the winner's choice. Free entry; subject to official rules.</p><p class="status">Entries not open yet</p></article><article class="card"><div class="eyebrow">Current challenge</div><h2>GASP Easter Egg Hunt</h2><p>The episode, deadline, gift card type, and official contest rules will be published before entries open.</p><a href="https://www.youtube.com/playlist?list=PLdGaqiEl2wRU" target="_blank" rel="noopener">Browse GASP episodes</a></article></section>
-<section id="enter" class="card"><div class="eyebrow">Entry questionnaire • demo preview</div><h2>Enter the Easter Egg Challenge</h2><p class="status">Preview only — no information is transmitted, stored or entered into a real drawing.</p>
+<section id="enter" class="card"><div class="eyebrow">Entry questionnaire • demo preview</div><h2>Enter the Easter Egg Challenge</h2><p class="status">Google Apps Script endpoint configured. Test mode: no information is transmitted, stored or entered into a real drawing.</p>
 <form id="entryForm">
 <div class="fields two">
 <label>Full name <b>*</b><input name="name" autocomplete="name" required maxlength="120" placeholder="First and last name"></label>
@@ -33,6 +33,9 @@
 <p><button type="button" class="button" id="sampleDraw">Test random winner selection</button></p><p id="sampleWinner" aria-live="polite">Try a sample drawing. No actual giveaway is conducted.</p></section>
 <section class="card"><h2>How the drawing works</h2><p>Share two observations or guesses about Easter eggs in the designated GASP episode. Any two completed answers count, whether or not they match the hidden clues. Once entries are enabled, eligible submissions received by the published deadline will go into a random Saturday drawing. Entry does not guarantee a prize.</p><p>Watching, liking, subscribing and commenting are not separate entry requirements. The form and entry rules will be freely accessible.</p><p class="fine"><strong>Before launch:</strong> Official rules must specify sponsor contact, eligibility, dates, prize details, winner selection, notification, privacy notice and applicable limitations. YouTube does not sponsor, endorse or administer this promotion.</p></section></main><footer><div class="wrap">THE HOMMEYOSH — KEEP CREATING. | This promotion is not associated with YouTube.</div></footer>
 <script>
+// Deployment endpoint configured. Submission remains disabled until a controlled end-to-end test.
+const GC_SCRIPT_URL="https://script.google.com/macros/s/AKfycby14up9RUIGNBiMMzCWjLrSOFGvU8OBrPZZqIC1VhLHrgmIso9iYydVgai81kH0yef_pg/exec";
+const GC_SUBMISSIONS_ENABLED=false;
 const entryForm=document.getElementById('entryForm');
 const delivery=document.getElementById('delivery');
 const phone=document.getElementById('phone');
@@ -56,7 +59,7 @@ entryForm.addEventListener('submit',function(e){
  e.preventDefault();updateConditions();
  if(!entryForm.reportValidity())return;
  const form=new FormData(entryForm);
- document.getElementById('entryResult').textContent='Preview successful, '+String(form.get('name')).trim().split(' ')[0]+'! Your sample entry is complete. Nothing was sent or saved, and you are NOT entered in a real drawing yet.';
+ document.getElementById('entryResult').textContent='Preview successful, '+String(form.get('name')).trim().split(' ')[0]+'! Your sample entry is complete. The Google endpoint is configured, but nothing was sent or saved and you are NOT entered in a real drawing yet.';
 });
 document.getElementById('sampleDraw').addEventListener('click',function(){const names=['Alex Example','Jordan Sample','Casey Demo'];const bytes=new Uint32Array(1);crypto.getRandomValues(bytes);const cap=Math.floor(4294967296/names.length)*names.length;let v=bytes[0];while(v>=cap){crypto.getRandomValues(bytes);v=bytes[0];}document.getElementById('sampleWinner').textContent='Sample winner: '+names[v%names.length]+' (fictional example only).';});
 </script></body></html>
