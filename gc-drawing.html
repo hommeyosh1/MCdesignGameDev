@@ -28,59 +28,59 @@
 
 </div><button class="button" id="submitEntry" type="submit" disabled>Entries Closed</button><div id="formCountdown" class="notice" style="margin-top:12px;font-weight:800;color:#b4ff65">Checking schedule...</div>
 <p id="entryResult" class="notice" role="status" aria-live="polite">Required fields are marked *. Entries close Saturday at 9:00 AM Eastern.</p></form></section>
-<section class="card"><h2>How the drawing works</h2><p>Share two observations or guesses about Easter eggs in the designated GASP episode. Any two completed answers count, whether or not they match the hidden clues. Once entries are enabled, eligible submissions received by the published deadline will go into a random Saturday drawing. Entry does not guarantee a prize.</p><p>Watching, liking, subscribing and commenting are not separate entry requirements. The form and entry rules will be freely accessible.</p><p class="fine"><strong>Before launch:</strong> Official rules must specify sponsor contact, eligibility, dates, prize details, winner selection, notification, privacy notice and applicable limitations. YouTube does not sponsor, endorse or administer this promotion.</p></section><dialog id="scheduleDialog" aria-label="Drawing schedule settings" style="background:#172125;color:#fff;border:1px solid #526358;border-radius:16px;max-width:min(480px,94vw);width:100%;padding:24px"><h2>Drawing Schedule Settings</h2><p class="fine">Enter PIN 9999 to open your schedule settings.</p><div id="pinGate"><label>PIN <input id="schedulePin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" style="width:100%;padding:12px;background:#0b1715;color:white"></label><p><button type="button" class="button" id="unlockSchedule">Unlock</button></p></div><div id="scheduleEditor" hidden><label>Opening date and time (Eastern Time)<input type="datetime-local" id="customOpen" style="display:block;width:100%;padding:12px"></label><label>Closing date and time (Eastern Time)<input type="datetime-local" id="customClose" style="display:block;width:100%;padding:12px"></label><p class="fine">Changes will be enforced by Google Apps Script for every visitor.</p><button class="button" type="button" id="saveSchedule">Save drawing schedule</button> <button type="button" id="resetSchedule">Restore weekly schedule</button></div><p id="scheduleError" role="status"></p><button type="button" id="closeSchedule">Close</button></dialog></main><footer><div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span>THE HOMMEYOSH — KEEP CREATING. | This promotion is not associated with YouTube.</span><button type="button" id="mcAdminButton" aria-label="MC settings" style="background:#bf2828;color:white;border:1px solid #ec6666;border-radius:7px;font-weight:800;font-size:12px;padding:5px 10px;cursor:pointer">MC</button></div></footer>
+<section class="card"><h2>How the drawing works</h2><p>Share two observations or guesses about Easter eggs in the designated GASP episode. Any two completed answers count, whether or not they match the hidden clues. Once entries are enabled, eligible submissions received by the published deadline will go into a random Saturday drawing. Entry does not guarantee a prize.</p><p>Watching, liking, subscribing and commenting are not separate entry requirements. The form and entry rules will be freely accessible.</p><p class="fine"><strong>Before launch:</strong> Official rules must specify sponsor contact, eligibility, dates, prize details, winner selection, notification, privacy notice and applicable limitations. YouTube does not sponsor, endorse or administer this promotion.</p></section><dialog id="scheduleDialog" aria-label="Drawing schedule settings" style="background:#172125;color:#fff;border:1px solid #526358;border-radius:16px;max-width:min(480px,94vw);width:100%;padding:24px"><h2>Drawing Schedule Settings</h2><p class="fine">Enter your original PIN to open the schedule editor. To publish for everyone, commit the generated schedule to GitHub with your GitHub account.</p><div id="pinGate"><label>PIN <input id="schedulePin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" style="width:100%;padding:12px;background:#0b1715;color:white"></label><p><button type="button" class="button" id="unlockSchedule">Unlock</button></p></div><div id="scheduleEditor" hidden><label>Opening date and time (Eastern Time)<input type="datetime-local" id="customOpen" style="display:block;width:100%;padding:12px"></label><label>Closing date and time (Eastern Time)<input type="datetime-local" id="customClose" style="display:block;width:100%;padding:12px"></label><p class="fine">Choose your dates, then prepare the schedule. GitHub login is required to publish for every visitor.</p><button class="button" type="button" id="saveSchedule">Prepare schedule</button> <button type="button" id="resetSchedule">Prepare weekly schedule</button><div id="publishPanel" hidden><p><strong>Publish your changes:</strong> Copy the JSON below, open the GitHub schedule file, replace its contents, and press <strong>Commit changes</strong>. The website will update after GitHub Pages publishes.</p><textarea id="scheduleJson" readonly rows="6" style="width:100%;background:#0b1715;color:white;padding:12px;font:13px monospace"></textarea><p><button class="button" type="button" id="copySchedule">Copy schedule JSON</button> <a class="button" style="margin-top:8px" href="https://github.com/hommeyosh1/MCdesignGameDev/edit/main/drawing-schedule.json" target="_blank" rel="noopener">Open GitHub editor</a></p></div></div><p id="scheduleError" role="status"></p><button type="button" id="closeSchedule">Close</button></dialog></main><footer><div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span>THE HOMMEYOSH — KEEP CREATING. | This promotion is not associated with YouTube.</span><button type="button" id="mcAdminButton" aria-label="MC settings" style="background:#bf2828;color:white;border:1px solid #ec6666;border-radius:7px;font-weight:800;font-size:12px;padding:5px 10px;cursor:pointer">MC</button></div></footer>
 <script>
 (function(){
 'use strict';
 const ENDPOINT='https://script.google.com/macros/s/AKfycby14up9RUIGNBiMMzCWjLrSOFGvU8OBrPZZqIC1VhLHrgmIso9iYydVgai81kH0yef_pg/exec';
 const TZ='America/New_York';
-const weekdays=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-let serverSchedule=null;
-let stateLoaded=false;
-let lastFetch=0;
-let pollWait=false;
 const byId=id=>document.getElementById(id);
 const form=byId('entryForm'),submit=byId('submitEntry'),count=byId('formCountdown');
-let sending=false;
+let config={mode:'weekly'},loaded=false,lastFetch=0,sending=false;
 function parts(t){
- const values=new Intl.DateTimeFormat('en-US',{timeZone:TZ,weekday:'short',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(t));
- return Object.fromEntries(values.filter(v=>v.type!=='literal').map(v=>[v.type,v.value]));
+ return Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:TZ,weekday:'short',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(t)).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
 }
 function timeEastern(y,m,d,h,min){
  let t=Date.UTC(y,m-1,d,h+5,min);
- for(let i=0;i<3;i++){
-  const p=parts(t),seen=Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute);
-  t+=Date.UTC(y,m-1,d,h,min)-seen;
- }
+ for(let i=0;i<4;i++){const p=parts(t);t+=Date.UTC(y,m-1,d,h,min)-Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute);}
  return t;
 }
+function weeklyWindow(now){
+ const p=parts(now),wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(p.weekday),minute=(+p.hour)*60+(+p.minute);
+ const active=(wd===4&&minute>=660)||wd===5||(wd===6&&minute<540);
+ const toTh=(4-wd+7)%7+(wd===4&&minute>=660?7:0);
+ const base=new Date(Date.UTC(+p.year,+p.month-1,+p.day));
+ const nextTh=new Date(base.getTime()+toTh*86400000);
+ const currentTh=new Date(base.getTime()+((4-wd+7)%7-(wd===4?7:wd===5?7:wd===6?7:0))*86400000);
+ const th=active?currentTh:nextTh;
+ const open=timeEastern(th.getUTCFullYear(),th.getUTCMonth()+1,th.getUTCDate(),11,0);
+ const sat=new Date(th.getTime()+2*86400000);
+ const close=timeEastern(sat.getUTCFullYear(),sat.getUTCMonth()+1,sat.getUTCDate(),9,0);
+ return {opening:open,closing:close,open:active};
+}
 function boundaries(now){
- if(!serverSchedule || Date.now()-lastFetch>120000) return {open:false,opening:now+60000,closing:now};
- const w=serverSchedule;
- return {open:now>=w.opening&&now<w.closing,opening:w.opening,closing:w.closing};
+ if(!loaded||Date.now()-lastFetch>300000)return {open:false,opening:now+60000,closing:now,unavailable:true};
+ if(config.mode==='custom'){
+  const opening=Date.parse(config.opening),closing=Date.parse(config.closing);
+  if(Number.isFinite(opening)&&Number.isFinite(closing)&&closing>opening)return {opening,closing,open:now>=opening&&now<closing};
+  return {open:false,opening:now+60000,closing:now,unavailable:true};
+ }
+ return weeklyWindow(now);
 }
-window.gcScheduleReceived=function(data){
- if(!data||data.ok!==true||!data.opening||!data.closing)return;
- serverSchedule={opening:Date.parse(data.opening),closing:Date.parse(data.closing),mode:data.mode};
- if(!Number.isFinite(serverSchedule.opening)||!Number.isFinite(serverSchedule.closing))return;
- lastFetch=Date.now();stateLoaded=true;refresh();
-};
-function loadServerSchedule(){
- const script=document.createElement('script');
- script.src=ENDPOINT+'?callback=gcScheduleReceived&t='+Date.now();
- script.async=true;
- script.onload=()=>script.remove();
- script.onerror=()=>script.remove();
- document.head.appendChild(script);
+async function loadConfig(){
+ try{
+  const response=await fetch('drawing-schedule.json?t='+Date.now(),{cache:'no-store'});
+  if(!response.ok)throw Error('Schedule unavailable');
+  const data=await response.json();
+  if(data.mode!=='weekly'&&data.mode!=='custom')throw Error('Invalid schedule mode');
+  config=data;lastFetch=Date.now();loaded=true;refresh();
+ }catch(err){console.error('Schedule:',err);loaded=false;refresh();}
 }
-function localInput(ms){
- const p=parts(ms);
- return p.year+'-'+p.month+'-'+p.day+'T'+p.hour+':'+p.minute;
-}
+function localInput(ms){const p=parts(ms);return p.year+'-'+p.month+'-'+p.day+'T'+p.hour+':'+p.minute;}
 function inputEastern(value){
  const m=String(value||'').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
  if(!m)return NaN;
- const y=Number(m[1]),mo=Number(m[2]),d=Number(m[3]),h=Number(m[4]),min=Number(m[5]);
+ const y=+m[1],mo=+m[2],d=+m[3],h=+m[4],min=+m[5];
  if(mo<1||mo>12||d<1||d>31||h>23||min>59)return NaN;
  return timeEastern(y,mo,d,h,min);
 }
@@ -90,29 +90,23 @@ function clock(ms){
 }
 function refresh(){
  const now=Date.now(),w=boundaries(now);
- submit.disabled=!stateLoaded||!w.open||sending;
+ submit.disabled=!w.open||sending;
  submit.textContent=sending?'Sending entry...':w.open?'Submit Entry':'Entries Closed';
- const msg=!stateLoaded?'Checking entry hours with Google...':w.open?'Drawing closes in '+clock(w.closing-now):'Drawing opens in '+clock(w.opening-now);
- count.textContent=msg;
- byId('entrySchedule').textContent=w.open?'Entries open until Saturday at 9:00 AM Eastern':'Entries Closed';
- byId('countdownBox').textContent=msg;
- byId('formSchedule').textContent=w.open?'Entry period is open.':'Entries open Thursday at 11:00 AM Eastern.';
+ const msg=w.unavailable?'Drawing schedule unavailable. Reload the page.':w.open?'Drawing closes in '+clock(w.closing-now):'Drawing opens in '+clock(w.opening-now);
+ count.textContent=msg;byId('countdownBox').textContent=msg;
+ byId('entrySchedule').textContent=w.open?'Entries Open':'Entries Closed';
+ byId('formSchedule').textContent=w.open?'Entry period is open.':w.unavailable?'Schedule unavailable.':'Entries are currently closed.';
  return w.open;
 }
 function phoneCheck(){
  const has=byId('phone').value.trim().length>0;
  byId('phoneConsent').hidden=!has;
- const check=form.elements.namedItem('drawingTextConsent');
- check.required=has;
+ const check=form.elements.namedItem('drawingTextConsent');check.required=has;
  if(!has)check.checked=false;
 }
-byId('phone').addEventListener('input',phoneCheck);
-phoneCheck();
-loadServerSchedule();
-setInterval(loadServerSchedule,30000);
-try{refresh();}catch(e){count.textContent='Schedule unavailable. Reload this page.';console.error('Schedule:',e);}
-setInterval(()=>{try{refresh();}catch(e){console.error(e)}},1000);
-window.addEventListener('focus',refresh);
+byId('phone').addEventListener('input',phoneCheck);phoneCheck();
+loadConfig();setInterval(loadConfig,60000);setInterval(refresh,1000);
+window.addEventListener('focus',()=>{loadConfig();refresh();});
 form.addEventListener('submit',async e=>{
  e.preventDefault();phoneCheck();if(!refresh()||!form.reportValidity())return;
  const data=new FormData(form),pick=k=>String(data.get(k)||'').trim();
@@ -120,57 +114,40 @@ form.addEventListener('submit',async e=>{
  sending=true;refresh();byId('entryResult').textContent='Sending your entry...';
  try{
   await fetch(ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
-  byId('entryResult').textContent='Your entry was sent. Check your email Saturday. Note: Google does not provide a readable receipt to this website.';
+  byId('entryResult').textContent='Request sent. Google does not provide a readable receipt here; delivery cannot be confirmed from the website.';
   form.reset();phoneCheck();
- }catch(err){byId('entryResult').textContent='Unable to send your entry. Please check your connection.';}
+ }catch(err){byId('entryResult').textContent='Unable to send your entry. Check your connection.';}
  finally{sending=false;refresh();}
 });
 const dialog=byId('scheduleDialog');
 byId('mcAdminButton').addEventListener('click',()=>{
- dialog.showModal();
- byId('pinGate').hidden=false;byId('scheduleEditor').hidden=true;
+ dialog.showModal();byId('pinGate').hidden=false;byId('scheduleEditor').hidden=true;byId('publishPanel').hidden=true;
  byId('schedulePin').value='';byId('scheduleError').textContent='';
 });
 byId('unlockSchedule').addEventListener('click',()=>{
  if(byId('schedulePin').value!=='9999'){byId('scheduleError').textContent='Incorrect PIN';return;}
- byId('scheduleError').textContent='';
- byId('pinGate').hidden=true;byId('scheduleEditor').hidden=false;
- if(serverSchedule){
-  byId('customOpen').value=localInput(serverSchedule.opening);
-  byId('customClose').value=localInput(serverSchedule.closing);
- }
+ byId('scheduleError').textContent='';byId('pinGate').hidden=true;byId('scheduleEditor').hidden=false;
+ const w=boundaries(Date.now());
+ byId('customOpen').value=localInput(w.opening);byId('customClose').value=localInput(w.closing);
 });
 byId('closeSchedule').addEventListener('click',()=>{byId('schedulePin').value='';dialog.close();});
-async function updateSchedule(payload){
- const password=window.prompt('Enter the private server administrator password to publish changes for everyone:');
- if(!password){byId('scheduleError').textContent='No changes sent. Server authorization is required.';return;}
- if(pollWait)return;
- pollWait=true;
- const message=byId('scheduleError');
- message.textContent='Sending settings to Google...';
- try{
-  await fetch(ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({...payload,password})});
-  message.textContent='Request sent. Verifying the saved schedule with Google...';
-  setTimeout(()=>{loadServerSchedule();setTimeout(()=>{
-   const matches=serverSchedule&&(payload.action==='resetSchedule'?serverSchedule.mode==='weekly':serverSchedule.mode==='custom'&&serverSchedule.opening===Date.parse(payload.opening)&&serverSchedule.closing===Date.parse(payload.closing));
-   message.textContent=matches?'Schedule confirmed on Google. Visitors will see these dates.':'Not confirmed. Check your password, Apps Script deployment, and server configuration.';
-  },1700);},800);
- }catch(e){message.textContent='Unable to reach Google. Schedule not confirmed.';}
- finally{pollWait=false;}
+function prepareSchedule(data){
+ byId('scheduleJson').value=JSON.stringify(data,null,2)+'\n';
+ byId('publishPanel').hidden=false;
+ byId('scheduleError').textContent='Schedule prepared. Copy it into GitHub and commit to publish for everyone.';
 }
-byId('resetSchedule').addEventListener('click',()=>updateSchedule({action:'resetSchedule'}));
 byId('saveSchedule').addEventListener('click',()=>{
  const opening=inputEastern(byId('customOpen').value),closing=inputEastern(byId('customClose').value);
- if(!Number.isFinite(opening)||!Number.isFinite(closing)){
-  byId('scheduleError').textContent='Could not read the dates. Select both opening and closing times.';return;
- }
- if(closing<=opening){
-  byId('scheduleError').textContent='Closing must be later than opening.';return;
- }
- if(closing-opening>31*86400000){
-  byId('scheduleError').textContent='Schedule cannot exceed 31 days.';return;
- }
- updateSchedule({action:'setSchedule',opening:new Date(opening).toISOString(),closing:new Date(closing).toISOString()});
+ if(!Number.isFinite(opening)||!Number.isFinite(closing)){byId('scheduleError').textContent='Select valid opening and closing dates.';return;}
+ if(closing<=opening){byId('scheduleError').textContent='Closing must be after opening.';return;}
+ if(closing-opening>31*86400000){byId('scheduleError').textContent='Maximum schedule length is 31 days.';return;}
+ prepareSchedule({mode:'custom',opening:new Date(opening).toISOString(),closing:new Date(closing).toISOString()});
+});
+byId('resetSchedule').addEventListener('click',()=>prepareSchedule({mode:'weekly'}));
+byId('copySchedule').addEventListener('click',async()=>{
+ const data=byId('scheduleJson').value;
+ try{await navigator.clipboard.writeText(data);byId('scheduleError').textContent='Copied. Paste into GitHub editor and commit.';}
+ catch(err){byId('scheduleJson').focus();byId('scheduleJson').select();byId('scheduleError').textContent='Select and copy this text, then paste into GitHub editor.';}
 });
 })();
 </script></body></html>
