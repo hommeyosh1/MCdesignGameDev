@@ -127,8 +127,15 @@ form.addEventListener('submit',async e=>{
 });
 const dialog=byId('scheduleDialog');
 const mcButton=byId('mcAdminButton');
+let shortcutHeld=false;
+window.addEventListener('keyup',e=>{if(!e.ctrlKey||!e.altKey)shortcutHeld=false;});
+window.addEventListener('blur',()=>{shortcutHeld=false;});
 window.addEventListener('keydown',e=>{
- if(e.ctrlKey&&e.altKey){mcButton.hidden=false;mcButton.classList.add('mc-revealed');}
+ if(e.ctrlKey&&e.altKey&&!shortcutHeld){
+  shortcutHeld=true;
+  const visible=mcButton.classList.toggle('mc-revealed');
+  mcButton.hidden=!visible;
+}
 });
 byId('mcAdminButton').addEventListener('click',()=>{
  dialog.showModal();byId('pinGate').hidden=false;byId('scheduleEditor').hidden=true;
