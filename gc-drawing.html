@@ -7,7 +7,7 @@
 <main class="wrap"><section class="hero"><div class="eyebrow">Weekly GASP Easter Egg Challenge</div><h1>Find the clues.<br><span>Enter the drawing.</span></h1><p class="lead">Each new GASP tutorial features hidden Easter eggs. Find at least <strong>2 out of 3</strong>, answer the challenge questions, and complete an entry for the weekly random gift card drawing.</p><p><a class="button" href="#enter">How to enter</a> &nbsp; <a href="https://www.youtube.com/playlist?list=PLdGaqiEl2wRU" target="_blank" rel="noopener">Watch GASP playlist</a></p></section>
 <section class="cards"><article class="card"><span class="num">1</span><h3>Explore the episode</h3><p>Find 3 Easter eggs placed throughout the tutorial.</p></article><article class="card"><span class="num">2</span><h3>Solve the challenge</h3><p>Submit your name, email and answers. Two completed answers are required. Entries are not graded for correctness.</p></article><article class="card"><span class="num">3</span><h3>Saturday drawing</h3><p>One eligible entry will be selected randomly after entries close.</p></article></section>
 <section class="two"><article class="card"><div class="eyebrow">Weekly prize</div><div class="prize">$15</div><div class="epic-prize"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Epic_Games_logo.svg/176px-Epic_Games_logo.svg.png" alt="Epic Games logo" width="72" height="84" loading="lazy"><div><strong>Epic Games Gift Card</strong><p>Use toward eligible Epic Games Store and Fab purchases.</p></div></div><p>Epic Games gift card code delivered by email to the winner. Free entry; subject to official rules.</p><p class="status" id="entrySchedule">Checking entry hours...</p></article><article class="card"><div class="eyebrow">Current challenge</div><h2>GASP Easter Egg Hunt</h2><p>The episode, deadline, gift card type, and official contest rules will be published before entries open.</p><a href="https://www.youtube.com/playlist?list=PLdGaqiEl2wRU" target="_blank" rel="noopener">Browse GASP episodes</a></article></section>
-<section id="enter" class="card"><div class="eyebrow">Entry questionnaire</div><h2>Enter the Easter Egg Challenge</h2><p class="status" id="formSchedule">Entries open Thursday 11:00 PM through Saturday 9:00 AM Eastern.</p>
+<section id="enter" class="card"><div class="eyebrow">Entry questionnaire</div><h2>Enter the Easter Egg Challenge</h2><p class="status" id="formSchedule">Entries open Thursday 11:00 AM through Saturday 9:00 AM Eastern.</p>
 <form id="entryForm">
 <div class="fields two">
 <label>Full name <b>*</b><input name="name" autocomplete="name" required maxlength="120" placeholder="First and last name"></label>
@@ -28,7 +28,7 @@
 
 </div><button class="button" id="submitEntry" type="submit">Submit Entry</button>
 <p id="entryResult" class="notice" role="status" aria-live="polite">Required fields are marked *. Entries close Saturday at 9:00 AM Eastern.</p></form></section>
-<section class="card"><h2>How the drawing works</h2><p>Share two observations or guesses about Easter eggs in the designated GASP episode. Any two completed answers count, whether or not they match the hidden clues. Once entries are enabled, eligible submissions received by the published deadline will go into a random Saturday drawing. Entry does not guarantee a prize.</p><p>Watching, liking, subscribing and commenting are not separate entry requirements. The form and entry rules will be freely accessible.</p><p class="fine"><strong>Before launch:</strong> Official rules must specify sponsor contact, eligibility, dates, prize details, winner selection, notification, privacy notice and applicable limitations. YouTube does not sponsor, endorse or administer this promotion.</p></section></main><footer><div class="wrap">THE HOMMEYOSH — KEEP CREATING. | This promotion is not associated with YouTube.</div></footer>
+<section class="card"><h2>How the drawing works</h2><p>Share two observations or guesses about Easter eggs in the designated GASP episode. Any two completed answers count, whether or not they match the hidden clues. Once entries are enabled, eligible submissions received by the published deadline will go into a random Saturday drawing. Entry does not guarantee a prize.</p><p>Watching, liking, subscribing and commenting are not separate entry requirements. The form and entry rules will be freely accessible.</p><p class="fine"><strong>Before launch:</strong> Official rules must specify sponsor contact, eligibility, dates, prize details, winner selection, notification, privacy notice and applicable limitations. YouTube does not sponsor, endorse or administer this promotion.</p></section><dialog id="scheduleDialog" aria-label="Drawing schedule settings" style="background:#172125;color:#fff;border:1px solid #526358;border-radius:16px;max-width:min(480px,94vw);width:100%;padding:24px"><h2>Drawing Schedule Settings</h2><p class="fine">Local browser settings only. To enforce changes for everyone, the Google Apps Script schedule must also be updated. The PIN here is not secure authentication.</p><div id="pinGate"><label>PIN <input id="schedulePin" type="password" inputmode="numeric" maxlength="8" style="width:100%;padding:12px;background:#0b1715;color:white"></label><p><button type="button" class="button" id="unlockSchedule">Unlock</button></p></div><div id="scheduleEditor" hidden><label>Opening date and time (Eastern Time)<input type="datetime-local" id="customOpen" style="display:block;width:100%;padding:12px"></label><label>Closing date and time (Eastern Time)<input type="datetime-local" id="customClose" style="display:block;width:100%;padding:12px"></label><p class="fine">These changes only affect the button in this browser; they do not change the Google server's rules.</p><button class="button" type="button" id="saveSchedule">Save local schedule</button> <button type="button" id="resetSchedule">Use normal weekly schedule</button></div><p id="scheduleError" role="status"></p><button type="button" id="closeSchedule">Close</button></dialog></main><footer><div class="wrap">THE HOMMEYOSH — KEEP CREATING. | This promotion is not associated with YouTube.</div></footer>
 <script>
 // The endpoint accepts JSON POSTs. Google Apps Script responds across origins without accessible CORS headers; verify arrival in the private Sheet.
 const GC_SCRIPT_URL="https://script.google.com/macros/s/AKfycby14up9RUIGNBiMMzCWjLrSOFGvU8OBrPZZqIC1VhLHrgmIso9iYydVgai81kH0yef_pg/exec";
@@ -44,32 +44,28 @@ const hasPhone=phone.value.trim().length>0;
  textConsent.required=hasPhone;
  if(!hasPhone)textConsent.checked=false;
 }
-const TEST_START=Date.parse('2026-10-27T00:30:05Z');
-const TEST_REOPEN=TEST_START+5*60*1000;
-const TEST_FINISH=TEST_REOPEN+10*60*1000;
 const zone='America/New_York';
 const weekdays=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 function easternParts(date){
- const parts=new Intl.DateTimeFormat('en-US',{timeZone:zone,weekday:'short',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
+ const parts=new Intl.DateTimeFormat('en-US',{timeZone:zone,weekday:'short',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',hourCycle:'h23'}).formatToParts(date);
  return Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
 }
 function nextOpening(now){
- // Find Thursday 23:00 in New York accounting for DST by calculating from local dates.
- const p=easternParts(new Date(now));
- const day=weekdays.indexOf(p.weekday),minutes=Number(p.hour)*60+Number(p.minute);
- const isOpen=(day===4&&minutes>=1380)||day===5||(day===6&&minutes<540);
- const currentDate=Date.UTC(+p.year,+p.month-1,+p.day);
- const offset=(4-day+7)%7+(day===4&&minutes>=1380?7:0);
- const targetDate=new Date(currentDate+offset*86400000);
- const y=targetDate.getUTCFullYear(),m=String(targetDate.getUTCMonth()+1).padStart(2,'0'),d=String(targetDate.getUTCDate()).padStart(2,'0');
- // At Thursday 11 PM: Eastern is UTC-4 in daylight time and UTC-5 otherwise.
- const around=new Date(Date.UTC(y,+m-1,+d,23));
- const localAround=easternParts(around);
- const easternHour=Number(localAround.hour);
- const easternDate=Date.UTC(+localAround.year,+localAround.month-1,+localAround.day,easternHour);
- let utc=around.getTime()+(Date.UTC(y,+m-1,+d,23)-easternDate);
+ const p=easternParts(new Date(now)),day=weekdays.indexOf(p.weekday),minutes=Number(p.hour)*60+Number(p.minute);
+ const isOpen=(day===4&&minutes>=660)||day===5||(day===6&&minutes<540);
+ const offset=(4-day+7)%7+(day===4&&minutes>=660?7:0);
+ const d=new Date(Date.UTC(+p.year,+p.month-1,+p.day+offset)),y=d.getUTCFullYear(),mo=d.getUTCMonth(),dt=d.getUTCDate();
+ // Find exact UTC instant corresponding to Thursday 11:00 AM Eastern, including DST.
+ let utc=Date.UTC(y,mo,dt,16);
+ for(let i=0;i<3;i++){
+  const z=easternParts(new Date(utc));
+  const observed=Date.UTC(+z.year,+z.month-1,+z.day,+z.hour,+z.minute);
+  utc+=Date.UTC(y,mo,dt,11)-observed;
+ }
  return {isOpen,nextOpen:utc};
 }
+let localOverride=null;
+try{localOverride=JSON.parse(localStorage.getItem('gc-local-schedule')||'null');}catch(e){}
 function countdown(ms){
  const s=Math.max(0,Math.ceil(ms/1000));
  const days=Math.floor(s/86400),hours=Math.floor(s%86400/3600),minutes=Math.floor(s%3600/60),seconds=s%60;
@@ -77,26 +73,21 @@ function countdown(ms){
 }
 function updateSchedule(){
  const now=Date.now(),weekly=nextOpening(now);
- const temporaryClosed=now>=TEST_START&&now<TEST_REOPEN;
- const temporaryOpen=now>=TEST_REOPEN&&now<TEST_FINISH;
- const open=GC_SUBMISSIONS_ENABLED&&(temporaryOpen||(!temporaryClosed&&weekly.isOpen));
+ const validLocal=localOverride&&Number.isFinite(localOverride.open)&&Number.isFinite(localOverride.close)&&localOverride.close>localOverride.open;
+ const open=GC_SUBMISSIONS_ENABLED&&(validLocal?(now>=localOverride.open&&now<localOverride.close):weekly.isOpen);
  const button=document.getElementById('submitEntry');
  button.disabled=!open||requestInProgress;
- button.textContent=requestInProgress?'Sending entry...':temporaryClosed?'Entries Closed':open?'Submit Entry':'Entries Closed';
- const status=document.getElementById('entrySchedule');
- const detail=document.getElementById('formSchedule');
- if(temporaryClosed){
-  status.textContent='5-minute lockout test — reopening in '+countdown(TEST_REOPEN-now);
-  detail.textContent='Entry button will reopen automatically when the countdown reaches zero.';
- }else if(temporaryOpen){
-  status.textContent='Button reopened — test window ends in '+countdown(TEST_FINISH-now);
-  detail.textContent='Button test only. Google Apps Script may still reject entries outside its official schedule.';
+ button.textContent=requestInProgress?'Sending entry...':open?'Submit Entry':'Entries Closed';
+ const status=document.getElementById('entrySchedule'),detail=document.getElementById('formSchedule');
+ if(validLocal){
+  status.textContent=open?'Local schedule: closes in '+countdown(localOverride.close-now):now<localOverride.open?'Local schedule: opens in '+countdown(localOverride.open-now):'Local schedule ended';
+  detail.textContent='Local schedule preview only — Google Apps Script uses its own submission hours.';
  }else if(weekly.isOpen){
-  status.textContent='Entries are open until Saturday at 9:00 AM Eastern.';
-  detail.textContent='Saturday drawing entries are currently open.';
+  status.textContent='Entries are open — close Saturday at 9:00 AM Eastern.';
+  detail.textContent='Weekly drawing entry period is open.';
  }else{
   status.textContent='Entries closed — next opening in '+countdown(weekly.nextOpen-now);
-  detail.textContent='Opens Thursday at 11:00 PM Eastern.';
+  detail.textContent='Opens Thursday at 11:00 AM Eastern.';
  }
  return open;
 }
@@ -131,4 +122,30 @@ entryForm.addEventListener('submit',async function(e){
   status.textContent='Unable to send the entry. Please check your connection and try again.';
  }finally{requestInProgress=false;updateSchedule();}
 });
+
+// Hidden keyboard shortcut: hold A + S + D + F simultaneously for five seconds.
+const heldKeys=new Set();let holdStart=0,adminShown=false;
+function showAdmin(){const dlg=document.getElementById('scheduleDialog');dlg.showModal();document.getElementById('pinGate').hidden=false;document.getElementById('scheduleEditor').hidden=true;document.getElementById('schedulePin').value='';}
+document.addEventListener('keydown',e=>{if(e.target.closest('input,textarea,select,[contenteditable]'))return;heldKeys.add(e.key.toLowerCase());if(['a','s','d','f'].every(k=>heldKeys.has(k))&&!holdStart){holdStart=Date.now();}});
+document.addEventListener('keyup',e=>{heldKeys.delete(e.key.toLowerCase());holdStart=0;adminShown=false;});
+window.addEventListener('blur',()=>{heldKeys.clear();holdStart=0;adminShown=false;});
+setInterval(()=>{if(holdStart&&!adminShown&&['a','s','d','f'].every(k=>heldKeys.has(k))&&Date.now()-holdStart>=5000){adminShown=true;showAdmin();}},100);
+document.getElementById('closeSchedule').onclick=()=>document.getElementById('scheduleDialog').close();
+document.getElementById('unlockSchedule').onclick=()=>{
+ if(document.getElementById('schedulePin').value!=='9999'){document.getElementById('scheduleError').textContent='Incorrect PIN';return;}
+ document.getElementById('pinGate').hidden=true;document.getElementById('scheduleEditor').hidden=false;document.getElementById('scheduleError').textContent='';
+};
+function easternInputToUTC(value){
+ const [date,time]=value.split('T');if(!date||!time)return NaN;
+ const [y,m,d]=date.split('-').map(Number),[h,min]=time.split(':').map(Number);
+ let t=Date.UTC(y,m-1,d,h+5,min);
+ for(let i=0;i<3;i++){const p=easternParts(new Date(t));const observed=Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute);t+=Date.UTC(y,m-1,d,h,min)-observed;}
+ return t;
+}
+document.getElementById('saveSchedule').onclick=()=>{
+ const open=easternInputToUTC(document.getElementById('customOpen').value),close=easternInputToUTC(document.getElementById('customClose').value);
+ if(!Number.isFinite(open)||!Number.isFinite(close)||close<=open){document.getElementById('scheduleError').textContent='Enter a closing time after the opening time.';return;}
+ localOverride={open,close};localStorage.setItem('gc-local-schedule',JSON.stringify(localOverride));updateSchedule();document.getElementById('scheduleDialog').close();
+};
+document.getElementById('resetSchedule').onclick=()=>{localOverride=null;localStorage.removeItem('gc-local-schedule');updateSchedule();document.getElementById('scheduleDialog').close();};
 </script></body></html>
