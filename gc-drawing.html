@@ -44,23 +44,63 @@ const hasPhone=phone.value.trim().length>0;
  textConsent.required=hasPhone;
  if(!hasPhone)textConsent.checked=false;
 }
-function easternWindow(){
- const p=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
- const minute=Number(p.hour)*60+Number(p.minute);
- return (p.weekday==='Thu'&&minute>=1380)||p.weekday==='Fri'||(p.weekday==='Sat'&&minute<540);
+const TEST_START=Date.parse('2026-10-27T00:30:05Z');
+const TEST_REOPEN=TEST_START+5*60*1000;
+const TEST_FINISH=TEST_REOPEN+10*60*1000;
+const zone='America/New_York';
+const weekdays=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function easternParts(date){
+ const parts=new Intl.DateTimeFormat('en-US',{timeZone:zone,weekday:'short',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
+ return Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
 }
-const TEST_LOCK_UNTIL=Date.parse('2026-10-27T00:26:35Z');
+function nextOpening(now){
+ // Find Thursday 23:00 in New York accounting for DST by calculating from local dates.
+ const p=easternParts(new Date(now));
+ const day=weekdays.indexOf(p.weekday),minutes=Number(p.hour)*60+Number(p.minute);
+ const isOpen=(day===4&&minutes>=1380)||day===5||(day===6&&minutes<540);
+ const currentDate=Date.UTC(+p.year,+p.month-1,+p.day);
+ const offset=(4-day+7)%7+(day===4&&minutes>=1380?7:0);
+ const targetDate=new Date(currentDate+offset*86400000);
+ const y=targetDate.getUTCFullYear(),m=String(targetDate.getUTCMonth()+1).padStart(2,'0'),d=String(targetDate.getUTCDate()).padStart(2,'0');
+ // At Thursday 11 PM: Eastern is UTC-4 in daylight time and UTC-5 otherwise.
+ const around=new Date(Date.UTC(y,+m-1,+d,23));
+ const localAround=easternParts(around);
+ const easternHour=Number(localAround.hour);
+ const easternDate=Date.UTC(+localAround.year,+localAround.month-1,+localAround.day,easternHour);
+ let utc=around.getTime()+(Date.UTC(y,+m-1,+d,23)-easternDate);
+ return {isOpen,nextOpen:utc};
+}
+function countdown(ms){
+ const s=Math.max(0,Math.ceil(ms/1000));
+ const days=Math.floor(s/86400),hours=Math.floor(s%86400/3600),minutes=Math.floor(s%3600/60),seconds=s%60;
+ return (days?days+'d ':'')+String(hours).padStart(2,'0')+':'+String(minutes).padStart(2,'0')+':'+String(seconds).padStart(2,'0');
+}
 function updateSchedule(){
- const testLocked=Date.now()<TEST_LOCK_UNTIL;
- const open=GC_SUBMISSIONS_ENABLED&&!testLocked&&easternWindow();
+ const now=Date.now(),weekly=nextOpening(now);
+ const temporaryClosed=now>=TEST_START&&now<TEST_REOPEN;
+ const temporaryOpen=now>=TEST_REOPEN&&now<TEST_FINISH;
+ const open=GC_SUBMISSIONS_ENABLED&&(temporaryOpen||(!temporaryClosed&&weekly.isOpen));
  const button=document.getElementById('submitEntry');
  button.disabled=!open||requestInProgress;
- button.textContent=requestInProgress?'Sending entry...':testLocked?'Entries Closed — 5-Minute Test':open?'Submit Entry':'Entries Closed';
- document.getElementById('entrySchedule').textContent=testLocked?'Temporary 5-minute test: entries are closed.':open?'Entries are open — close Saturday at 9:00 AM Eastern':'Entries closed — reopen Thursday at 11:00 PM Eastern';
- document.getElementById('formSchedule').textContent=testLocked?'Temporary test in progress. Regular schedule resumes automatically.':open?'Enter now for Saturday’s drawing.':'Entries reopen Thursday at 11:00 PM Eastern.';
+ button.textContent=requestInProgress?'Sending entry...':temporaryClosed?'Entries Closed':open?'Submit Entry':'Entries Closed';
+ const status=document.getElementById('entrySchedule');
+ const detail=document.getElementById('formSchedule');
+ if(temporaryClosed){
+  status.textContent='5-minute lockout test — reopening in '+countdown(TEST_REOPEN-now);
+  detail.textContent='Entry button will reopen automatically when the countdown reaches zero.';
+ }else if(temporaryOpen){
+  status.textContent='Button reopened — test window ends in '+countdown(TEST_FINISH-now);
+  detail.textContent='Button test only. Google Apps Script may still reject entries outside its official schedule.';
+ }else if(weekly.isOpen){
+  status.textContent='Entries are open until Saturday at 9:00 AM Eastern.';
+  detail.textContent='Saturday drawing entries are currently open.';
+ }else{
+  status.textContent='Entries closed — next opening in '+countdown(weekly.nextOpen-now);
+  detail.textContent='Opens Thursday at 11:00 PM Eastern.';
+ }
  return open;
 }
-setInterval(updateSchedule,30000);
+setInterval(updateSchedule,1000);
 window.addEventListener('focus',updateSchedule);
 document.addEventListener('visibilitychange',updateSchedule);
 phone.addEventListener('input',updateConditions);
