@@ -9,7 +9,7 @@
  */
 const SHEET_NAME = 'Entries';
 const ACCEPTING_ENTRIES = true;
-// Weekly entry window: Thursday 11:00 PM through Saturday 8:59:59 AM, New York time.
+// Weekly entry window: Thursday 11:00 AM through Saturday 8:59:59 AM, New York time.
 function windowState(now) {
   now = now || new Date();
   const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
@@ -18,7 +18,7 @@ function windowState(now) {
   }).formatToParts(now).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
   const weekday=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(parts.weekday);
   const minutes=Number(parts.hour)*60+Number(parts.minute);
-  const open=(weekday===4&&minutes>=23*60)||(weekday===5)||(weekday===6&&minutes<9*60);
+  const open=(weekday===4&&minutes>=11*60)||(weekday===5)||(weekday===6&&minutes<9*60);
   // Saturday's calendar date identifies the entire Thursday–Saturday drawing.
   const offset=(6-weekday+7)%7;
   const saturday=new Date(Date.UTC(Number(parts.year),Number(parts.month)-1,Number(parts.day)+offset));
@@ -32,7 +32,7 @@ function output(obj) {
 }
 function doGet() { const w=windowState(); return output({ok:true,acceptingEntries:ACCEPTING_ENTRIES&&w.open,drawingId:w.drawingId}); }
 function doPost(e) {
-  if (!ACCEPTING_ENTRIES || !windowState().open) return output({ok:false,error:'Entries are closed. Open Thursday at 11 PM Eastern; close Saturday at 9 AM Eastern.'});
+  if (!ACCEPTING_ENTRIES || !windowState().open) return output({ok:false,error:'Entries are closed. Open Thursday at 11 AM Eastern; close Saturday at 9 AM Eastern.'});
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) return output({ok:false,error:'Please retry shortly.'});
   try {
