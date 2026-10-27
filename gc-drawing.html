@@ -78,9 +78,11 @@ function localInput(ms){
  return p.year+'-'+p.month+'-'+p.day+'T'+p.hour+':'+p.minute;
 }
 function inputEastern(value){
- const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+ const m=String(value||'').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
  if(!m)return NaN;
- return timeEastern(+m[1],+m[2],+m[3],+m[4],+m[5]);
+ const y=Number(m[1]),mo=Number(m[2]),d=Number(m[3]),h=Number(m[4]),min=Number(m[5]);
+ if(mo<1||mo>12||d<1||d>31||h>23||min>59)return NaN;
+ return timeEastern(y,mo,d,h,min);
 }
 function clock(ms){
  const secs=Math.max(0,Math.ceil(ms/1000)),d=Math.floor(secs/86400),h=Math.floor(secs%86400/3600),m=Math.floor(secs%3600/60),s=secs%60;
@@ -159,8 +161,14 @@ async function updateSchedule(payload){
 byId('resetSchedule').addEventListener('click',()=>updateSchedule({action:'resetSchedule'}));
 byId('saveSchedule').addEventListener('click',()=>{
  const opening=inputEastern(byId('customOpen').value),closing=inputEastern(byId('customClose').value);
- if(!Number.isFinite(opening)||!Number.isFinite(closing)||closing<=opening||closing-opening>31*86400000){
-  byId('scheduleError').textContent='Choose a valid opening and closing date (maximum 31 days).';return;
+ if(!Number.isFinite(opening)||!Number.isFinite(closing)){
+  byId('scheduleError').textContent='Could not read the dates. Select both opening and closing times.';return;
+ }
+ if(closing<=opening){
+  byId('scheduleError').textContent='Closing must be later than opening.';return;
+ }
+ if(closing-opening>31*86400000){
+  byId('scheduleError').textContent='Schedule cannot exceed 31 days.';return;
  }
  updateSchedule({action:'setSchedule',opening:new Date(opening).toISOString(),closing:new Date(closing).toISOString()});
 });
