@@ -28,7 +28,7 @@
 
 </div><button class="button" id="submitEntry" type="submit" disabled>Entries Closed</button><div id="formCountdown" class="notice" style="margin-top:12px;font-weight:800;color:#b4ff65">Checking schedule...</div>
 <p id="entryResult" class="notice" role="status" aria-live="polite">Required fields are marked *. Entries close Saturday at 9:00 AM Eastern.</p></form></section>
-<section class="card"><h2>How the drawing works</h2><p>Share two observations or guesses about Easter eggs in the designated GASP episode. Any two completed answers count, whether or not they match the hidden clues. Once entries are enabled, eligible submissions received by the published deadline will go into a random Saturday drawing. Entry does not guarantee a prize.</p><p>Watching, liking, subscribing and commenting are not separate entry requirements. The form and entry rules will be freely accessible.</p><p class="fine"><strong>Before launch:</strong> Official rules must specify sponsor contact, eligibility, dates, prize details, winner selection, notification, privacy notice and applicable limitations. YouTube does not sponsor, endorse or administer this promotion.</p></section><dialog id="scheduleDialog" aria-label="Drawing schedule settings" style="background:#172125;color:#fff;border:1px solid #526358;border-radius:16px;max-width:min(480px,94vw);width:100%;padding:24px"><h2>Drawing Schedule Settings</h2><p class="fine">Enter PIN 9999 to open the controls.</p><div id="pinGate"><label>PIN <input id="schedulePin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" style="width:100%;padding:12px;background:#0b1715;color:white"></label><p><button type="button" class="button" id="unlockSchedule">Unlock</button></p></div><div id="scheduleEditor" hidden><h3>Submission mode</h3><p class="fine">Automatic schedule: Thursday 11 AM through Saturday 9 AM Eastern.</p><div class="fields"><label><input type="radio" name="adminMode" value="weekly" checked style="width:auto;display:inline;margin-right:9px">Automatic weekly schedule</label><label><input type="radio" name="adminMode" value="open" style="width:auto;display:inline;margin-right:9px">Force Open — enable Submit Entry</label><label><input type="radio" name="adminMode" value="closed" style="width:auto;display:inline;margin-right:9px">Force Closed — disable Submit Entry</label></div><p><button class="button" type="button" id="saveSchedule">Save Changes</button></p><div id="connectGitHub" hidden><h3>One-time GitHub authorization</h3><p class="fine">To publish for all visitors, GitHub requires a fine-grained access token for this repository. Create one with <strong>Contents: Read and write</strong> permission for <strong>MCdesignGameDev only</strong>. Do not put the token in chat or in GitHub files.</p><p><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Create limited GitHub token</a></p><label>GitHub access token<input type="password" id="githubToken" autocomplete="off" placeholder="github_pat_..." style="display:block;width:100%;padding:12px;background:#0b1715;color:white"></label><p class="fine">Token stays in this browser tab's session only; closing the tab clears it. You'll need to enter it again in a new session.</p><button type="button" id="connectSave" class="button">Authorize and Save</button></div><p class="fine">Force Open changes the public Submit button. The current Google Apps Script may still reject entries based on its own schedule.</p><button type="button" id="disconnectGitHub" style="background:transparent;color:#c3ccc8;border:1px solid #526358;padding:7px;border-radius:6px">Forget GitHub authorization</button></div><p id="scheduleError" role="status" aria-live="polite"></p><button type="button" id="closeSchedule">Close</button></dialog></main><footer><div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span>THE HOMMEYOSH — KEEP CREATING. | This promotion is not associated with YouTube.</span><button type="button" id="mcAdminButton" aria-label="MC settings" style="background:#bf2828;color:white;border:1px solid #ec6666;border-radius:7px;font-weight:800;font-size:12px;padding:5px 10px;cursor:pointer">MC</button></div></footer>
+<section class="card"><h2>How the drawing works</h2><p>Share two observations or guesses about Easter eggs in the designated GASP episode. Any two completed answers count, whether or not they match the hidden clues. Once entries are enabled, eligible submissions received by the published deadline will go into a random Saturday drawing. Entry does not guarantee a prize.</p><p>Watching, liking, subscribing and commenting are not separate entry requirements. The form and entry rules will be freely accessible.</p><p class="fine"><strong>Before launch:</strong> Official rules must specify sponsor contact, eligibility, dates, prize details, winner selection, notification, privacy notice and applicable limitations. YouTube does not sponsor, endorse or administer this promotion.</p></section><dialog id="scheduleDialog" aria-label="Drawing controls" style="background:#172125;color:#fff;border:1px solid #526358;border-radius:16px;max-width:min(430px,94vw);width:100%;padding:24px"><h2>Drawing Controls</h2><div id="pinGate"><label>PIN <input id="schedulePin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" style="width:100%;padding:12px;background:#0b1715;color:#fff"></label><p><button class="button" type="button" id="unlockSchedule">Unlock</button></p></div><div id="scheduleEditor" hidden><p>Choose Submit Entry mode:</p><div class="fields"><label><input type="radio" name="adminMode" value="open" style="display:inline;width:auto"> ON — Submit enabled</label><label><input type="radio" name="adminMode" value="closed" style="display:inline;width:auto"> OFF — Submit disabled</label><label><input type="radio" name="adminMode" value="weekly" style="display:inline;width:auto"> SCHEDULE — Thu 11 AM to Sat 9 AM Eastern</label></div><p><button class="button" type="button" id="saveSchedule">Save Changes</button></p><p class="fine"><strong>Browser-only control:</strong> This changes the button on this browser, not for all visitors. Publishing an override for everyone requires authenticated shared storage. It does not override the Google Apps Script receiver.</p></div><p id="scheduleError" role="status" aria-live="polite"></p><button type="button" id="closeSchedule">Close</button></dialog></main><footer><div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span>THE HOMMEYOSH — KEEP CREATING. | This promotion is not associated with YouTube.</span><button type="button" id="mcAdminButton" aria-label="MC settings" style="background:#bf2828;color:white;border:1px solid #ec6666;border-radius:7px;font-weight:800;font-size:12px;padding:5px 10px;cursor:pointer">MC</button></div></footer>
 <script>
 (function(){
 'use strict';
@@ -59,6 +59,10 @@ function weeklyWindow(now){
  return {opening:open,closing:close,open:active};
 }
 function boundaries(now){
+ const browserMode=localStorage.getItem('mcDrawingBrowserMode');
+ if(browserMode==='open')return {opening:now,closing:now+86400000,open:true,localOverride:true};
+ if(browserMode==='closed')return {opening:now+86400000,closing:now,open:false,localOverride:true};
+
  if(!loaded||Date.now()-lastFetch>300000)return {open:false,opening:now+60000,closing:now,unavailable:true};
  if(config.mode==='open')return {opening:now,closing:now+86400000,open:true};
  if(config.mode==='closed')return {opening:now+86400000,closing:now,open:false,forcedClosed:true};
@@ -122,56 +126,24 @@ form.addEventListener('submit',async e=>{
  finally{sending=false;refresh();}
 });
 const dialog=byId('scheduleDialog');
-const gitHubApi='https://api.github.com/repos/hommeyosh1/MCdesignGameDev/contents/drawing-schedule.json';
-let githubToken=sessionStorage.getItem('mcDrawingGitHubToken')||'';
-let savingMode=false;
 byId('mcAdminButton').addEventListener('click',()=>{
  dialog.showModal();byId('pinGate').hidden=false;byId('scheduleEditor').hidden=true;
- byId('connectGitHub').hidden=true;byId('schedulePin').value='';byId('scheduleError').textContent='';
+ byId('schedulePin').value='';byId('scheduleError').textContent='';
 });
 byId('unlockSchedule').addEventListener('click',()=>{
  if(byId('schedulePin').value!=='9999'){byId('scheduleError').textContent='Incorrect PIN';return;}
  byId('scheduleError').textContent='';byId('pinGate').hidden=true;byId('scheduleEditor').hidden=false;
- const mode=['weekly','open','closed'].includes(config.mode)?config.mode:'weekly';
+ const mode=localStorage.getItem('mcDrawingBrowserMode')||'weekly';
  const choice=dialog.querySelector('input[name="adminMode"][value="'+mode+'"]');if(choice)choice.checked=true;
 });
-byId('closeSchedule').addEventListener('click',()=>{byId('schedulePin').value='';dialog.close();});
-async function publishMode(token){
- if(savingMode)return;
- const selected=dialog.querySelector('input[name="adminMode"]:checked');if(!selected)return;
- savingMode=true;
- const status=byId('scheduleError'),button=byId('saveSchedule');
- button.disabled=true;status.textContent='Saving to GitHub...';
- try{
-  const headers={'Accept':'application/vnd.github+json','Authorization':'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28'};
-  const current=await fetch(gitHubApi+'?t='+Date.now(),{headers,cache:'no-store'});
-  if(!current.ok)throw Error('GitHub authorization failed ('+current.status+'). Check repository access and Contents permission.');
-  const file=await current.json();
-  const body=JSON.stringify({mode:selected.value},null,2)+'\n';
-  const encoded=btoa(String.fromCharCode(...new TextEncoder().encode(body)));
-  const result=await fetch(gitHubApi,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({message:'Update drawing submission mode',content:encoded,sha:file.sha,branch:'main'})});
-  if(!result.ok)throw Error('GitHub could not save ('+result.status+'). Check write permissions.');
-  githubToken=token;sessionStorage.setItem('mcDrawingGitHubToken',token);
-  byId('connectGitHub').hidden=true;
-  status.textContent='Saved to GitHub. Publishing for all visitors; this can take a short while.';
-  await loadConfig();
- }catch(err){status.textContent=err.message||'Unable to publish schedule.';console.error(err);}
- finally{savingMode=false;button.disabled=false;}
-}
 byId('saveSchedule').addEventListener('click',()=>{
- if(!githubToken){byId('connectGitHub').hidden=false;byId('scheduleError').textContent='Connect GitHub once for this browser session to save changes.';return;}
- publishMode(githubToken);
+ const choice=dialog.querySelector('input[name="adminMode"]:checked');if(!choice)return;
+ if(choice.value==='weekly')localStorage.removeItem('mcDrawingBrowserMode');
+ else localStorage.setItem('mcDrawingBrowserMode',choice.value);
+ refresh();
+ byId('scheduleError').textContent='Saved on this browser only. Other visitors are unchanged.';
 });
-byId('connectSave').addEventListener('click',()=>{
- const token=byId('githubToken').value.trim();
- if(!token){byId('scheduleError').textContent='Enter your limited GitHub token.';return;}
- publishMode(token);
- byId('githubToken').value='';
-});
-byId('disconnectGitHub').addEventListener('click',()=>{
- githubToken='';sessionStorage.removeItem('mcDrawingGitHubToken');byId('githubToken').value='';
- byId('scheduleError').textContent='GitHub authorization cleared from this tab.';
-});
+byId('closeSchedule').addEventListener('click',()=>{byId('schedulePin').value='';dialog.close();});
 
 })();
 </script></body></html>
