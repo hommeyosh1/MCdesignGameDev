@@ -9,7 +9,7 @@
  */
 const SHEET_NAME = 'Entries';
 const ACCEPTING_ENTRIES = true;
-// Weekly entry window: Thursday 11:00 AM through Saturday 8:59:59 AM, New York time.
+// No server-side opening/closing schedule. The public website controls its Submit Entry button.
 function windowState(now) {
   now = now || new Date();
   const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
@@ -17,27 +17,24 @@ function windowState(now) {
     weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'
   }).formatToParts(now).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
   const weekday=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(parts.weekday);
-  const minutes=Number(parts.hour)*60+Number(parts.minute);
-  const open=(weekday===4&&minutes>=11*60)||(weekday===5)||(weekday===6&&minutes<9*60);
   // Saturday's calendar date identifies the entire Thursday–Saturday drawing.
   const offset=(6-weekday+7)%7;
   const saturday=new Date(Date.UTC(Number(parts.year),Number(parts.month)-1,Number(parts.day)+offset));
   const drawingId='GASP-'+Utilities.formatDate(saturday,'UTC','yyyy-MM-dd');
-  return {open, drawingId};
+  return {drawingId};
 }
 const MAX_ANSWER = 300;
 
 function output(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
-function doGet() { const w=windowState(); return output({ok:true,acceptingEntries:ACCEPTING_ENTRIES&&w.open,drawingId:w.drawingId}); }
+function doGet() { const w=windowState(); return output({ok:true,acceptingEntries:ACCEPTING_ENTRIES,drawingId:w.drawingId}); }
 function doPost(e) {
-  if (!ACCEPTING_ENTRIES || !windowState().open) return output({ok:false,error:'Entries are closed. Open Thursday at 11 AM Eastern; close Saturday at 9 AM Eastern.'});
+  if (!ACCEPTING_ENTRIES) return output({ok:false,error:'Entries are currently unavailable.'});
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) return output({ok:false,error:'Please retry shortly.'});
   try {
     const weekly=windowState();
-    if (!weekly.open) return output({ok:false,error:'Drawing entries are closed.'});
     const p = JSON.parse((e.postData && e.postData.contents) || '{}');
     const s = x => String(x == null ? '' : x).trim();
     const name=s(p.name),email=s(p.email).toLowerCase(), phone=s(p.phone);
@@ -50,11 +47,14 @@ function doPost(e) {
     const street=s(p.street),unit=s(p.apt),city=s(p.city),state=s(p.state),postal=s(p.postal);
     if (delivery==='Mail' && (!street||!city||!state||!postal)) return output({ok:false,error:'Please supply your mailing address.'});
     const sh=SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    // Keep the original 21 columns and add explicit Eastern entry date/time in V and W.
+    if (sh.getRange(1,22).getValue() !== 'Entry Date (Eastern)') sh.getRange(1,22).setValue('Entry Date (Eastern)');
+    if (sh.getRange(1,23).getValue() !== 'Entry Time (Eastern)') sh.getRange(1,23).setValue('Entry Time (Eastern)');
     const values=sh.getDataRange().getValues();
     if (values.slice(1).some(row=>s(row[1])===weekly.drawingId&&s(row[4]).toLowerCase()===email)) return output({ok:false,error:'This email is already entered for this drawing.'});
     const safe = x => /^[=+\-@]/.test(x) ? "'"+x : x; // Prevent formula injection
     const now=new Date(),entryId=Utilities.getUuid();
-    sh.appendRow([now,weekly.drawingId,entryId,safe(name),safe(email),safe(phone),delivery,safe(street),safe(unit),safe(city),safe(state),safe(postal),safe(egg1),safe(egg2),safe(egg3),true,!!p.drawingTextConsent,!!p.promoConsent,now,'Eligible','']);
+    sh.appendRow([now,weekly.drawingId,entryId,safe(name),safe(email),safe(phone),delivery,safe(street),safe(unit),safe(city),safe(state),safe(postal),safe(egg1),safe(egg2),safe(egg3),true,!!p.drawingTextConsent,!!p.promoConsent,now,'Eligible','',Utilities.formatDate(now,'America/New_York','yyyy-MM-dd'),Utilities.formatDate(now,'America/New_York','hh:mm:ss a')]);
     return output({ok:true,message:'Entry received',entryId});
   } catch(err) {
     console.error(err);
