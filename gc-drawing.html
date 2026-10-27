@@ -49,13 +49,15 @@ function easternWindow(){
  const minute=Number(p.hour)*60+Number(p.minute);
  return (p.weekday==='Thu'&&minute>=1380)||p.weekday==='Fri'||(p.weekday==='Sat'&&minute<540);
 }
+const TEST_LOCK_UNTIL=Date.parse('2026-10-27T00:26:35Z');
 function updateSchedule(){
- const open=GC_SUBMISSIONS_ENABLED&&easternWindow();
+ const testLocked=Date.now()<TEST_LOCK_UNTIL;
+ const open=GC_SUBMISSIONS_ENABLED&&!testLocked&&easternWindow();
  const button=document.getElementById('submitEntry');
  button.disabled=!open||requestInProgress;
- button.textContent=requestInProgress?'Sending entry...':open?'Submit Entry':'Entries Closed';
- document.getElementById('entrySchedule').textContent=open?'Entries are open — close Saturday at 9:00 AM Eastern':'Entries closed — reopen Thursday at 11:00 PM Eastern';
- document.getElementById('formSchedule').textContent=open?'Enter now for Saturday’s drawing.':'Entries reopen Thursday at 11:00 PM Eastern.';
+ button.textContent=requestInProgress?'Sending entry...':testLocked?'Entries Closed — 5-Minute Test':open?'Submit Entry':'Entries Closed';
+ document.getElementById('entrySchedule').textContent=testLocked?'Temporary 5-minute test: entries are closed.':open?'Entries are open — close Saturday at 9:00 AM Eastern':'Entries closed — reopen Thursday at 11:00 PM Eastern';
+ document.getElementById('formSchedule').textContent=testLocked?'Temporary test in progress. Regular schedule resumes automatically.':open?'Enter now for Saturday’s drawing.':'Entries reopen Thursday at 11:00 PM Eastern.';
  return open;
 }
 setInterval(updateSchedule,30000);
