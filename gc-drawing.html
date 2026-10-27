@@ -6,8 +6,8 @@
 <header><nav class="wrap"><a href="index.html">THE <span style="color:var(--lime)">HOMMEYOSH</span></a><div><a href="index.html#videos">Videos</a><a href="index.html#upcoming">Coming Soon</a><a href="gc-drawing.html" aria-current="page">GC Drawing</a></div></nav></header>
 <main class="wrap"><section class="hero"><div class="eyebrow">Weekly GASP Easter Egg Challenge</div><h1>Find the clues.<br><span>Enter the drawing.</span></h1><p class="lead">Each new GASP tutorial features hidden Easter eggs. Find at least <strong>2 out of 3</strong>, answer the challenge questions, and complete an entry for the weekly random gift card drawing.</p><p><a class="button" href="#enter">How to enter</a> &nbsp; <a href="https://www.youtube.com/playlist?list=PLdGaqiEl2wRU" target="_blank" rel="noopener">Watch GASP playlist</a></p></section>
 <section class="cards"><article class="card"><span class="num">1</span><h3>Explore the episode</h3><p>Find 3 Easter eggs placed throughout the tutorial.</p></article><article class="card"><span class="num">2</span><h3>Solve the challenge</h3><p>Submit your name, email and answers. Two completed answers are required. Entries are not graded for correctness.</p></article><article class="card"><span class="num">3</span><h3>Saturday drawing</h3><p>One eligible entry will be selected randomly after entries close.</p></article></section>
-<section class="two"><article class="card"><div class="eyebrow">Weekly prize</div><div class="prize">$15</div><div class="epic-prize"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Epic_Games_logo.svg/176px-Epic_Games_logo.svg.png" alt="Epic Games logo" width="72" height="84" loading="lazy"><div><strong>Epic Games Gift Card</strong><p>Use toward eligible Epic Games Store and Fab purchases.</p></div></div><p>Epic Games gift card code delivered by email to the winner. Free entry; subject to official rules.</p><p class="status">Entry form available</p></article><article class="card"><div class="eyebrow">Current challenge</div><h2>GASP Easter Egg Hunt</h2><p>The episode, deadline, gift card type, and official contest rules will be published before entries open.</p><a href="https://www.youtube.com/playlist?list=PLdGaqiEl2wRU" target="_blank" rel="noopener">Browse GASP episodes</a></article></section>
-<section id="enter" class="card"><div class="eyebrow">Entry questionnaire</div><h2>Enter the Easter Egg Challenge</h2><p class="status">Submit the form below to enter the weekly drawing.</p>
+<section class="two"><article class="card"><div class="eyebrow">Weekly prize</div><div class="prize">$15</div><div class="epic-prize"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Epic_Games_logo.svg/176px-Epic_Games_logo.svg.png" alt="Epic Games logo" width="72" height="84" loading="lazy"><div><strong>Epic Games Gift Card</strong><p>Use toward eligible Epic Games Store and Fab purchases.</p></div></div><p>Epic Games gift card code delivered by email to the winner. Free entry; subject to official rules.</p><p class="status" id="entrySchedule">Checking entry hours...</p></article><article class="card"><div class="eyebrow">Current challenge</div><h2>GASP Easter Egg Hunt</h2><p>The episode, deadline, gift card type, and official contest rules will be published before entries open.</p><a href="https://www.youtube.com/playlist?list=PLdGaqiEl2wRU" target="_blank" rel="noopener">Browse GASP episodes</a></article></section>
+<section id="enter" class="card"><div class="eyebrow">Entry questionnaire</div><h2>Enter the Easter Egg Challenge</h2><p class="status" id="formSchedule">Entries open Thursday 11:00 PM through Saturday 9:00 AM Eastern.</p>
 <form id="entryForm">
 <div class="fields two">
 <label>Full name <b>*</b><input name="name" autocomplete="name" required maxlength="120" placeholder="First and last name"></label>
@@ -27,12 +27,13 @@
 <label><input type="checkbox" name="promoConsent"> Optional: I agree to receive promotional emails about upcoming videos and projects, and if I provided my phone number, promotional texts as well. Message/data rates may apply; frequency varies; I can unsubscribe from email and reply STOP to texts. This consent is not required to enter.</label>
 
 </div><button class="button" id="submitEntry" type="submit">Submit Entry</button>
-<p id="entryResult" class="notice" role="status" aria-live="polite">Required fields are marked *. The winner will be contacted by email on Saturday.</p></form></section>
+<p id="entryResult" class="notice" role="status" aria-live="polite">Required fields are marked *. Entries close Saturday at 9:00 AM Eastern.</p></form></section>
 <section class="card"><h2>How the drawing works</h2><p>Share two observations or guesses about Easter eggs in the designated GASP episode. Any two completed answers count, whether or not they match the hidden clues. Once entries are enabled, eligible submissions received by the published deadline will go into a random Saturday drawing. Entry does not guarantee a prize.</p><p>Watching, liking, subscribing and commenting are not separate entry requirements. The form and entry rules will be freely accessible.</p><p class="fine"><strong>Before launch:</strong> Official rules must specify sponsor contact, eligibility, dates, prize details, winner selection, notification, privacy notice and applicable limitations. YouTube does not sponsor, endorse or administer this promotion.</p></section></main><footer><div class="wrap">THE HOMMEYOSH — KEEP CREATING. | This promotion is not associated with YouTube.</div></footer>
 <script>
 // The endpoint accepts JSON POSTs. Google Apps Script responds across origins without accessible CORS headers; verify arrival in the private Sheet.
 const GC_SCRIPT_URL="https://script.google.com/macros/s/AKfycby14up9RUIGNBiMMzCWjLrSOFGvU8OBrPZZqIC1VhLHrgmIso9iYydVgai81kH0yef_pg/exec";
 const GC_SUBMISSIONS_ENABLED=true;
+let requestInProgress=false;
 const entryForm=document.getElementById('entryForm');
 const phone=document.getElementById('phone');
 const phoneConsent=document.getElementById('phoneConsent');
@@ -43,11 +44,29 @@ const hasPhone=phone.value.trim().length>0;
  textConsent.required=hasPhone;
  if(!hasPhone)textConsent.checked=false;
 }
+function easternWindow(){
+ const p=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+ const minute=Number(p.hour)*60+Number(p.minute);
+ return (p.weekday==='Thu'&&minute>=1380)||p.weekday==='Fri'||(p.weekday==='Sat'&&minute<540);
+}
+function updateSchedule(){
+ const open=GC_SUBMISSIONS_ENABLED&&easternWindow();
+ const button=document.getElementById('submitEntry');
+ button.disabled=!open||requestInProgress;
+ button.textContent=requestInProgress?'Sending entry...':open?'Submit Entry':'Entries Closed';
+ document.getElementById('entrySchedule').textContent=open?'Entries are open — close Saturday at 9:00 AM Eastern':'Entries closed — reopen Thursday at 11:00 PM Eastern';
+ document.getElementById('formSchedule').textContent=open?'Enter now for Saturday’s drawing.':'Entries reopen Thursday at 11:00 PM Eastern.';
+ return open;
+}
+setInterval(updateSchedule,30000);
+window.addEventListener('focus',updateSchedule);
+document.addEventListener('visibilitychange',updateSchedule);
 phone.addEventListener('input',updateConditions);
 updateConditions();
+updateSchedule();
 entryForm.addEventListener('submit',async function(e){
  e.preventDefault();updateConditions();
- if(!entryForm.reportValidity())return;
+ if(!updateSchedule()||!entryForm.reportValidity())return;
  const submit=document.getElementById('submitEntry');
  const status=document.getElementById('entryResult');
  const form=new FormData(entryForm);
@@ -57,8 +76,8 @@ entryForm.addEventListener('submit',async function(e){
  payload.drawingEmailConsent=form.has('drawingEmailConsent');
  payload.drawingTextConsent=form.has('drawingTextConsent');
  payload.promoConsent=form.has('promoConsent');
- submit.disabled=true;
- submit.textContent='Sending entry...';
+ requestInProgress=true;
+ updateSchedule();
  status.textContent='Sending your information to the drawing system...';
  try{
   // Google Apps Script does not support cross-origin response reads from GitHub Pages.
@@ -68,6 +87,6 @@ entryForm.addEventListener('submit',async function(e){
   entryForm.reset();updateConditions();
  }catch(error){
   status.textContent='Unable to send the entry. Please check your connection and try again.';
- }finally{submit.disabled=false;submit.textContent='Submit Entry';}
+ }finally{requestInProgress=false;updateSchedule();}
 });
 </script></body></html>
