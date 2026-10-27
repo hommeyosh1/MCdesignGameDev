@@ -51,7 +51,7 @@ function weeklyWindow(now){
  const toTh=(4-wd+7)%7+(wd===4&&minute>=660?7:0);
  const base=new Date(Date.UTC(+p.year,+p.month-1,+p.day));
  const nextTh=new Date(base.getTime()+toTh*86400000);
- const currentTh=new Date(base.getTime()+((4-wd+7)%7-(wd===4?7:wd===5?7:wd===6?7:0))*86400000);
+ const currentTh=new Date(base.getTime()+((4-wd+7)%7-(wd===5||wd===6?7:0))*86400000);
  const th=active?currentTh:nextTh;
  const open=timeEastern(th.getUTCFullYear(),th.getUTCMonth()+1,th.getUTCDate(),11,0);
  const sat=new Date(th.getTime()+2*86400000);
