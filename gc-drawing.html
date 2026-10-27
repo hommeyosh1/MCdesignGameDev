@@ -66,6 +66,13 @@ function nextOpening(now){
 }
 let localOverride=null; // Clear earlier browser-only test overrides. Server schedule is authoritative.
 try{localStorage.removeItem('gc-local-schedule');}catch(e){}
+function closingTime(now){
+ const p=easternParts(new Date(now));
+ const day=weekdays.indexOf(p.weekday),add=(6-day+7)%7;
+ const date=new Date(Date.UTC(+p.year,+p.month-1,+p.day+add));
+ const iso=date.toISOString().slice(0,10);
+ return easternInputToUTC(iso+'T09:00');
+}
 function countdown(ms){
  const s=Math.max(0,Math.ceil(ms/1000));
  const days=Math.floor(s/86400),hours=Math.floor(s%86400/3600),minutes=Math.floor(s%3600/60),seconds=s%60;
@@ -88,8 +95,8 @@ function updateSchedule(){
  }else if(weekly.isOpen){
   status.textContent='Entries are open — close Saturday at 9:00 AM Eastern.';
   detail.textContent='Weekly drawing entry period is open.';
-  formCountdown.textContent='Entries are open — closes Saturday at 9:00 AM Eastern.';
-  document.getElementById('countdownBox').textContent='Open now • Closes Saturday 9:00 AM ET';
+  formCountdown.textContent='Drawing closes in '+countdown(closingTime(now)-now);
+  document.getElementById('countdownBox').textContent='Closes in '+countdown(closingTime(now)-now);
  }else{
   status.textContent='Entries Closed';
   document.getElementById('countdownBox').textContent='Opens in '+countdown(weekly.nextOpen-now);
